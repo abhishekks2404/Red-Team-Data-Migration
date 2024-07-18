@@ -1,0 +1,7 @@
+downloaded_videos
+__pycache__
+vnvv
+.env
+main_data
+*.csv
+*.xlsx
