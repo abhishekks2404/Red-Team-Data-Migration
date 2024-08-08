@@ -15,7 +15,7 @@ for index, row in df.iterrows():
             time.sleep(50)
             count = 0
         course_data = get_course_data(course_id)
-        save_to_excel(course_data, "course_full_data.xlsx")
+        save_to_excel(course_data, "master_sheet1.xlsx")
         print("Data saved to course_full_data.xlsx successfully!")
         processed_indices.append(index)
         df = df.drop(index)

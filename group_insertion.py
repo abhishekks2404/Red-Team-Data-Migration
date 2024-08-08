@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 
+
 load_dotenv()
 
 api_key = os.getenv('api_key')
@@ -32,7 +33,7 @@ def course_data_insertion(title, description, image):
         print(f"Request failed: {e}")
         return None
 
-df_course = pd.read_excel('dummy_Data_test.xlsx')
+df_course = pd.read_excel('final_testing_data.xlsx')
 duplicate_file = 'duplicate_course_id.csv'
 
 
@@ -61,18 +62,21 @@ if 'course_uuid' not in df_course.columns:
     df_course['course_uuid'] = None 
 
 df_course = df_course.replace({np.nan: None})
-
+# count = 0
 for index, row in df_course.iterrows():
+    # count += 1
     # if row['course_id'] in processed_ids :
     #     print(f"Skipping already processed or errored course_id: {row['course_id']}")
     #     continue
+    # if count==6:
+    #     time
     
     if row['course_id'] in df_duplicate['course_id'].tolist():
         print(f"Skipping duplicate course_id and appending the same uuid: {row['course_id']}")
 
         duplicate_uuid = df_duplicate[df_duplicate['course_id'] == row['course_id']]['course_uuid'].values[0]
         df_course.at[index, 'course_uuid'] = duplicate_uuid
-        df_course.to_excel('dummy_Data_test.xlsx', index=False)
+        df_course.to_excel('final_testing_data.xlsx', index=False)
         continue
 
     try:
@@ -101,7 +105,7 @@ for index, row in df_course.iterrows():
             df_duplicate.to_csv(duplicate_file, index=False)
 
             df_course.at[index, 'course_uuid'] = course_uuid
-            df_course.to_excel('course_full_data.xlsx', index=False)
+            df_course.to_excel('final_testing_data.xlsx', index=False)
         else:
             print(f"Unexpected response format for course_id {row['course_id']}: {course_response}")
             error_ids.append(row['course_id'])

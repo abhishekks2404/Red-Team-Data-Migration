@@ -10,9 +10,8 @@ key = os.getenv('access_token')
 
 def execute_graphql_query(course_id):
     url = "https://api.thinkific.com/stable/graphql"
-    variables = {
-        "course_id": course_id,
-    }
+    variables = {"id": course_id}
+    
     headers = {
         "Authorization": f"Bearer {key}"
     }
@@ -78,8 +77,8 @@ def execute_graphql_query(course_id):
     raise Exception("Max retries exceeded. Query failed due to rate limiting.")
 
 # Execute the query
-# try:
-#     result = execute_graphql_query("1629110")
-#     print(result)
-# except Exception as e:
-#     print(e)
+try:
+    result = execute_graphql_query("2815885")
+    print(result)
+except Exception as e:
+    print(e)

@@ -2,12 +2,38 @@ import requests
 from dotenv import load_dotenv
 import os
 import pandas as pd
+from bs4 import BeautifulSoup
+
 import numpy as np
 
 # Load environment variables
 load_dotenv()
 
 api_key = os.getenv('api_key')
+csv_file = "final_testing_data.xlsx"
+
+def process_html_content(html_content):
+    html_content = html_content.replace("<strong>", "").replace("</strong>", "").replace("<em>", "").replace("</em>", "").replace("<figure>","").replace("</figure>","").replace("<blockquote>","").replace("</blockquote>","").replace("<section>","").replace("</section>","").replace("<br/>","")
+
+    
+
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Remove img tags and their content
+    for img_tag in soup.find_all('img'):
+        img_tag.decompose()
+    
+    # Replace iframe tags with <a> tags
+    for iframe_tag in soup.find_all('iframe'):
+        video_url = iframe_tag['src']
+        new_a_tag = soup.new_tag('a', href=video_url, target="_blank")
+        new_a_tag.string = "Click here to watch video"
+        iframe_tag.replace_with(new_a_tag)
+    
+    return str(soup)
+
+def create_anchor_tag(link, text):
+    return f'<a href="{link}">{text}</a>'
 
 def card_data_insertion(title, group_id):
     url = "https://redteam2.hivelearning.com/api/beta/resources"
@@ -52,6 +78,7 @@ def append_card_to_pathway(pathway_id,card_id):
 
 def append_content_to_card(card_id,text):
     url = f"https://redteam2.hivelearning.com/api/beta/cards/{card_id}/content"
+    processed_html = process_html_content(text)
     headers = {
         'Accept': 'application/json',
         'x-api-key': api_key,
@@ -59,7 +86,7 @@ def append_content_to_card(card_id,text):
     }
 
     payload = {
-        'type': 'text',
+        'type': 'file',
         'value': text
     }
     print(payload)
@@ -72,50 +99,66 @@ def append_content_to_card(card_id,text):
         print(f"Request failed: {e}")
         return None
 
-error_file = 'error_cards.xlsx'
+# text_html = ''''''
+# process_html = process_html_content(text_html)
+print(append_content_to_card("eefb3fc5-d81f-4311-be27-1f6ae3b9dabf","https://hivelearning-upload-prod.s3.amazonaws.com/redteam2/379c39cf-e412-48d9-a9af-3230ae3e395f"))
 
-if os.path.exists(error_file):
-    df_error = pd.read_excel(error_file)
-else:
-    df_error = pd.DataFrame(columns=['course_id', 'lesson_id'])
+# error_file = 'error_cards.xlsx'
 
-df_course = pd.read_excel('dummy_Data_test.xlsx')
+# if os.path.exists(error_file):
+#     df_error = pd.read_excel(error_file)
+# else:
+#     df_error = pd.DataFrame(columns=['course_id', 'lesson_id'])
 
-if 'card_uuid' not in df_course.columns:
-    df_course['card_uuid'] = np.nan
+# df_course = pd.read_excel(csv_file)
 
-for index, row in df_course.iterrows():
-        if not pd.isna(row['card_uuid']):
-            print("card UUID already exists for course_id:", row['chapter_id'])
-            continue
+# if 'card_uuid' not in df_course.columns:
+#     df_course['card_uuid'] = np.nan
 
-        try:
-            card_response = card_data_insertion(row['lesson_title'], row['course_uuid'])
-            print("Response:", card_response)
+# for index, row in df_course.iterrows():
+#         if not pd.isna(row['card_uuid']):
+#             print("card UUID already exists for course_id:", row['chapter_id'])
+#             continue
 
-            if card_response and 'data' in card_response and 'id' in card_response['data']:
-                card_uuid = card_response['data']['id']
-                iframe_link = row['multimedia_url']
-                print("Card UUID:", card_uuid)
-                append_response = append_card_to_pathway(row['pathway_uuid'], card_uuid)
-                print("Append Response:", append_response)
-                # print(row['text_htmlDescription'])
-                append_content = append_content_to_card(card_uuid, row['text_htmlDescription'])
-                if append_content == None:
-                    print("Appended content to error_cards file")
-                    df_error = pd.concat([df_error, pd.DataFrame([{'course_id': row['course_id'], 'lesson_id': row['lesson_id'], 'card_uuid': card_uuid}])], ignore_index=True)
-                    df_error.to_excel(error_file, index=False)
-                print("Append Content:", append_content)
-                df_course.at[index, 'card_uuid'] = card_uuid  # Update DataFrame
-                df_course.to_excel('dummy_Data_test.xlsx', index=False)
+#         try:
+#             card_response = card_data_insertion(row['lesson_title'], row['course_uuid'])
+#             print("Response:", card_response)
 
-            else:
-                print(f"Unexpected response format for course_id {row['course_id']}: {card_response}")
-                df_error = pd.concat([df_error, pd.DataFrame([{'course_id': row['course_id'], 'lesson_id': row['lesson_id']}])], ignore_index=True)
-                df_error.to_excel(error_file, index=False)
+#             if card_response and 'data' in card_response and 'id' in card_response['data']:
+#                 card_uuid = card_response['data']['id']
+#                 iframe_link = row['multimedia_url']
+#                 print("Card UUID:", card_uuid)
+#                 append_response = append_card_to_pathway(row['pathway_uuid'], card_uuid)
+#                 print("Append Response:", append_response)
+#                 # print(row['text_htmlDescription'])
+#                 if row['content_type']== "TEXT" :
+#                     append_content = append_content_to_card(card_uuid, row['text_htmlDescription'])
+#                     if append_content == None:
+#                         print("Appended content to error_cards file")
+#                         df_error = pd.concat([df_error, pd.DataFrame([{'course_id': row['course_id'], 'lesson_id': row['lesson_id'], 'card_uuid': card_uuid}])], ignore_index=True)
+#                         df_error.to_excel(error_file, index=False)
+#                     print("Append Content:", append_content)
 
-        except Exception as e:
-            print(f"Error processing course_id {row['course_id']}: {e}")
-            df_error = pd.concat([df_error, pd.DataFrame([{'course_id': row['course_id'], 'lesson_id': row['lesson_id']}])], ignore_index=True)
+#                 if row['content_type']== "MULTIMEDIA" :
+#                     multimedia_url = row['multimedia_url']
+#                     log_attendance = create_anchor_tag(multimedia_url, "Click here to log your attendance")
+#                     append_content = append_content_to_card(card_uuid, log_attendance)
+#                     if append_content == None:
+#                         print("Appended content to error_cards file")
+#                         df_error = pd.concat([df_error, pd.DataFrame([{'course_id': row['course_id'], 'lesson_id': row['lesson_id'], 'card_uuid': card_uuid}])], ignore_index=True)
+#                         df_error.to_excel(error_file, index=False)
+#                     print("Append Content:", append_content)
 
-            df_error.to_excel(error_file, index=False)
+#                 df_course.at[index, 'card_uuid'] = card_uuid  # Update DataFrame
+#                 df_course.to_excel(csv_file, index=False)
+
+#             else:
+#                 print(f"Unexpected response format for course_id {row['course_id']}: {card_response}")
+#                 df_error = pd.concat([df_error, pd.DataFrame([{'course_id': row['course_id'], 'lesson_id': row['lesson_id']}])], ignore_index=True)
+#                 df_error.to_excel(error_file, index=False)
+
+#         except Exception as e:
+#             print(f"Error processing course_id {row['course_id']}: {e}")
+#             df_error = pd.concat([df_error, pd.DataFrame([{'course_id': row['course_id'], 'lesson_id': row['lesson_id']}])], ignore_index=True)
+
+#             df_error.to_excel(error_file, index=False)

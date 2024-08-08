@@ -10,7 +10,7 @@ load_dotenv()
 api_key = os.getenv('api_key')
 
 def update_progression_in_card(userid, resource_id):
-    url = f"https://redteam2.hivelearning.com/api/beta/users/{userid}/interactions/resources/{resource_id}"
+    url = f"https://bc.hivelearning.com/api/beta/users/{userid}/interactions/resources/{resource_id}"
     headers = {
         'Accept': 'application/json',
         'x-api-key': api_key,
@@ -32,5 +32,5 @@ def update_progression_in_card(userid, resource_id):
         return None
 
 
-a = update_progression_in_card('632b2a9d-1f2b-4055-b777-ed5e435aad6d', 'c16ba914-a05c-4bcf-ad7f-fc4f2a09feb4')
+a = update_progression_in_card('3ecc6cf0-950a-4d9b-9c06-b93f0ffd2917', 'e22416c3-e310-4ae6-9090-4bdba40e8722')
 print(a)

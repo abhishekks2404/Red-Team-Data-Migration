@@ -1,7 +1,12 @@
 downloaded_videos
+downloaded_file
+images
+subtitle
+
 __pycache__
 vnvv
 .env
 main_data
 *.csv
 *.xlsx
+*.pdf

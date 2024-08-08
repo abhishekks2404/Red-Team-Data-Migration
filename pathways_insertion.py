@@ -31,7 +31,9 @@ def pathway_data_insertion(title, group_id):
         print(f"Request failed: {e}")
         return None
 
-df_course = pd.read_excel('dummy_Data_test.xlsx')
+csv_file = "final_testing_data.xlsx"
+
+df_course = pd.read_excel(csv_file)
 error_file = 'error_pathways.xlsx'
 duplicate_file = 'duplicate_pathway_id.csv'
 
@@ -60,7 +62,7 @@ for index, row in df_course.iterrows():
 
         duplicate_uuid = df_duplicate[df_duplicate['chapter_id'] == row['chapter_id']]['pathway_uuid'].values[0]
         df_course.at[index, 'pathway_uuid'] = duplicate_uuid
-        df_course.to_excel('dummy_Data_test.xlsx', index=False)
+        df_course.to_excel(csv_file, index=False)
         continue
 
     try:
@@ -80,7 +82,7 @@ for index, row in df_course.iterrows():
             df_duplicate.to_csv(duplicate_file, index=False)
 
             df_course.at[index, 'pathway_uuid'] = pathway_uuid  # Update DataFrame
-            df_course.to_excel('dummy_Data_test.xlsx', index=False)
+            df_course.to_excel(csv_file, index=False)
 
         else:
             print(f"Unexpected response format for course_id {row['course_id']}: {pathway_response}")
